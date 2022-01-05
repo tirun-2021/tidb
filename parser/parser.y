@@ -286,6 +286,10 @@ import (
 	zerofill          "ZEROFILL"
 	natural           "NATURAL"
 
+	/* hackathon added */
+	point    "POINT"
+	geometry "GEOMETRY"
+
 	/* The following tokens belong to UnReservedKeyword. Notice: make sure these tokens are contained in UnReservedKeyword. */
 	account               "ACCOUNT"
 	action                "ACTION"
@@ -1271,6 +1275,7 @@ import (
 	BlobType                               "Blob types"
 	TextType                               "Text types"
 	DateAndTimeType                        "Date and Time types"
+	SpatialType                            "Spatial types"
 	OptFieldLen                            "Field length or empty"
 	FieldLen                               "Field length"
 	FieldOpts                              "Field type definition option list"
@@ -11487,6 +11492,17 @@ Type:
 	NumericType
 |	StringType
 |	DateAndTimeType
+|	SpatialType
+
+SpatialType:
+	"POINT"
+	{
+		$$ = types.NewFieldType(mysql.TypeGeometry)
+	}
+|	"GEOMETRY"
+	{
+		$$ = types.NewFieldType(mysql.TypeGeometry)
+	}
 
 NumericType:
 	IntegerType OptFieldLen FieldOpts

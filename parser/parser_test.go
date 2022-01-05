@@ -373,6 +373,26 @@ func RunTest(t *testing.T, table []testCase, enableWindowFunc bool) {
 	}
 }
 
+func TestTripleZParser(t *testing.T) {
+	p := parser.New()
+	p.EnableWindowFunc(false)
+	table := []testCase{
+		{"CREATE TABLE geom(g GEOMETRY)", true, "CREATE TABLE `geom` (`g` GEOMETRY)"},
+	}
+	for _, tbl := range table {
+		_, _, err := p.Parse("", "", "")
+		if !tbl.ok {
+			require.Errorf(t, err, "source %v", tbl.src)
+			continue
+		}
+		require.NoErrorf(t, err, "source %v", tbl.src)
+		// restore correctness test
+		if tbl.ok {
+			RunRestoreTest(t, tbl.src, tbl.restore, false)
+		}
+	}
+}
+
 func RunRestoreTest(t *testing.T, sourceSQLs, expectSQLs string, enableWindowFunc bool) {
 	var sb strings.Builder
 	p := parser.New()
@@ -1027,6 +1047,9 @@ AAAAAAAAAAAA5gm5Mg==
 		{"SHOW PLACEMENT LABELS", true, "SHOW PLACEMENT LABELS"},
 		{"SHOW PLACEMENT LABELS LIKE '%zone%'", true, "SHOW PLACEMENT LABELS LIKE _UTF8MB4'%zone%'"},
 		{"SHOW PLACEMENT LABELS WHERE label='l123'", true, "SHOW PLACEMENT LABELS WHERE `label`=_UTF8MB4'l123'"},
+
+		// for spatial tidb (hackathon)
+		{"CREATE TABLE geom(g GEOMETRY)", true, "CREATE TABLE `geom`(`g` GEOMETRY)"},
 	}
 	RunTest(t, table, false)
 }

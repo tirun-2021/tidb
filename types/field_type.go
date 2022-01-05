@@ -312,6 +312,7 @@ func DefaultTypeForValue(value interface{}, tp *FieldType, char string, collate 
 		tp.Decimal = 0
 		tp.Charset = charset.CharsetUTF8MB4
 		tp.Collate = charset.CollationUTF8MB4
+		// TODO(TripleZ): add POINT, GEOMETRY
 	default:
 		tp.Tp = mysql.TypeUnspecified
 		tp.Flen = UnspecifiedLength

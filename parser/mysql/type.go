@@ -45,6 +45,7 @@ const (
 	TypeVarString  byte = 0xfd
 	TypeString     byte = 0xfe
 	TypeGeometry   byte = 0xff
+	// TODO(TripleZ): need Point type?
 )
 
 // Flag information.
