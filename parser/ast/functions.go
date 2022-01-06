@@ -350,6 +350,11 @@ const (
 	NextVal = "nextval"
 	LastVal = "lastval"
 	SetVal  = "setval"
+
+	// Spatial functions.
+	Point      = "point"
+	StEquals   = "st_equals"
+	StDistance = "st_distance"
 )
 
 type FuncCallExprType int8

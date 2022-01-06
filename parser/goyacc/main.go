@@ -522,7 +522,7 @@ type %[1]sXError struct {
 
 	mustFormat(f, `%u)
 
-var %[1]sDebug = 4
+var %[1]sDebug = 1
 
 type %[1]sLexer interface {
 	Lex(lval *%[1]sSymType) int

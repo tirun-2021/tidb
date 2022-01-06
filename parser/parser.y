@@ -7154,6 +7154,10 @@ FunctionCallKeyword:
 	{
 		$$ = &ast.FuncCallExpr{FnName: model.NewCIStr(ast.PasswordFunc), Args: $3.([]ast.ExprNode)}
 	}
+|	"POINT" '(' ExpressionListOpt ')'
+	{
+		$$ = &ast.FuncCallExpr{FnName: model.NewCIStr(ast.Point), Args: $3.([]ast.ExprNode)}
+	}
 
 FunctionCallNonKeyword:
 	builtinCurTime '(' FuncDatetimePrecListOpt ')'
@@ -11497,11 +11501,11 @@ Type:
 SpatialType:
 	"POINT"
 	{
-		$$ = types.NewFieldType(mysql.TypeGeometry)
+		$$ = types.NewFieldType(mysql.TypeLonglong)
 	}
 |	"GEOMETRY"
 	{
-		$$ = types.NewFieldType(mysql.TypeGeometry)
+		$$ = types.NewFieldType(mysql.TypeLonglong)
 	}
 
 NumericType:

@@ -879,6 +879,11 @@ var funcs = map[string]functionClass{
 	ast.NextVal: &nextValFunctionClass{baseFunctionClass{ast.NextVal, 1, 1}},
 	ast.LastVal: &lastValFunctionClass{baseFunctionClass{ast.LastVal, 1, 1}},
 	ast.SetVal:  &setValFunctionClass{baseFunctionClass{ast.SetVal, 2, 2}},
+
+	// Spatial functions.
+	ast.Point:      &pointFunctionClass{baseFunctionClass{ast.Point, 2, 2}},
+	ast.StEquals:   &stEqualsFunctionClass{baseFunctionClass{ast.StEquals, 2, 2}},
+	ast.StDistance: &stDistanceFunctionClass{baseFunctionClass{ast.StDistance, 2, 2}},
 }
 
 // IsFunctionSupported check if given function name is a builtin sql function.
