@@ -672,6 +672,10 @@ var funcs = map[string]functionClass{
 	ast.Year:             &yearFunctionClass{baseFunctionClass{ast.Year, 1, 1}},
 	ast.YearWeek:         &yearWeekFunctionClass{baseFunctionClass{ast.YearWeek, 1, 2}},
 	ast.LastDay:          &lastDayFunctionClass{baseFunctionClass{ast.LastDay, 1, 1}},
+
+	ast.Point:      &pointFunctionClass{baseFunctionClass{ast.Point, 2, 2}},
+	ast.StEquals:   &stEqualsFunctionClass{baseFunctionClass{ast.StEquals, 2, 2}},
+	ast.StDistance: &stDistanceFunctionClass{baseFunctionClass{ast.StDistance, 2, 2}},
 	// TSO functions
 	ast.TiDBBoundedStaleness: &tidbBoundedStalenessFunctionClass{baseFunctionClass{ast.TiDBBoundedStaleness, 2, 2}},
 	ast.TiDBParseTso:         &tidbParseTsoFunctionClass{baseFunctionClass{ast.TiDBParseTso, 1, 1}},

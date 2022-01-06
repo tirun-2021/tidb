@@ -176,6 +176,11 @@ const (
 	Year             = "year"
 	YearWeek         = "yearweek"
 	LastDay          = "last_day"
+
+	Point      = "point"
+	StEquals   = "st_equals"
+	StDistance = "st_distance"
+
 	// TSO functions
 	// TiDBBoundedStaleness is used to determine the TS for a read only request with the given bounded staleness.
 	// It will be used in the Stale Read feature.
