@@ -385,6 +385,54 @@ func (c *LineStringFunctionClass) getFunction(ctx sessionctx.Context, args []Exp
 	return sig, nil
 }
 
+type builtinSTLengthDecSig struct {
+	baseBuiltinFunc
+}
+
+func (b *builtinSTLengthDecSig) Clone() builtinFunc {
+	newSig := &builtinSTLengthDecSig{}
+	newSig.cloneFrom(&b.baseBuiltinFunc)
+	return newSig
+}
+
+func (b *builtinSTLengthDecSig) evalReal(row chunk.Row) (float64, bool, error) {
+	return b.evalRealWithCtx(b.ctx, row)
+}
+
+func (b *builtinSTLengthDecSig) evalRealWithCtx(ctx sessionctx.Context, row chunk.Row) (float64, bool, error) {
+	geoByteStr1, isNull, err := b.args[0].EvalString(ctx, row)
+	val1, isNull, err := getGeoStr(geoByteStr1)
+	if err != nil && terror.ErrorEqual(types.ErrWrongValue.GenWithStackByArgs(types.ETString, val1), err) {
+		// Return 0 for invalid date time.
+		return 0, false, nil
+	}
+	if isNull {
+		return 0, true, nil
+	}
+
+	geom1, err := wkt.Unmarshal(val1)
+	lineString1 := geom.NewLineStringFlat(geom1.Layout(), geom1.FlatCoords())
+
+	return lineString1.Length(), false, nil
+}
+
+type stLengthFunctionClass struct {
+	baseFunctionClass
+}
+
+func (c *stLengthFunctionClass) getFunction(ctx sessionctx.Context, args []Expression) (builtinFunc, error) {
+	if err := c.verifyArgs(args); err != nil {
+		return nil, err
+	}
+	bf, err := newBaseBuiltinFuncWithTp(ctx, c.funcName, args, types.ETReal, types.ETString)
+	if err != nil {
+		return nil, err
+	}
+	sig := &builtinSTLengthDecSig{bf}
+	sig.setPbCode(6301)
+	return sig, nil
+}
+
 type builtinSTAsTextSigIntSig struct {
 	baseBuiltinFunc
 }

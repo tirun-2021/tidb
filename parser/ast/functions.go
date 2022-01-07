@@ -357,6 +357,7 @@ const (
 	StDistance = "st_distance"
 	StX        = "st_x"
 	StY        = "st_y"
+	StLength   = "st_length"
 	LineString = "linestring"
 	StAsText   = "st_astext"
 	StGeomFromText = "st_geomfromtext"
