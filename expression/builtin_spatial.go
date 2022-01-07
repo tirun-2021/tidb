@@ -213,6 +213,102 @@ func (c *stDistanceFunctionClass) getFunction(ctx sessionctx.Context, args []Exp
 	return sig, nil
 }
 
+type builtinSTXDecSig struct {
+	baseBuiltinFunc
+}
+
+func (b *builtinSTXDecSig) Clone() builtinFunc {
+	newSig := &builtinSTXDecSig{}
+	newSig.cloneFrom(&b.baseBuiltinFunc)
+	return newSig
+}
+
+func (b *builtinSTXDecSig) evalReal(row chunk.Row) (float64, bool, error) {
+	return b.evalRealWithCtx(b.ctx, row)
+}
+
+func (b *builtinSTXDecSig) evalRealWithCtx(ctx sessionctx.Context, row chunk.Row) (float64, bool, error) {
+	val1, isNull, err := b.args[0].EvalString(ctx, row)
+	if err != nil && terror.ErrorEqual(types.ErrWrongValue.GenWithStackByArgs(types.ETString, val1), err) {
+		// Return 0 for invalid date time.
+		return 0, false, nil
+	}
+	if isNull {
+		return 0, true, nil
+	}
+	// ST_Distance function logic
+	geom1, err := wkt.Unmarshal(val1)
+
+	point := geom.NewPoint(geom1.Layout()).MustSetCoords(geom1.FlatCoords())
+
+	return point.X(), false, nil
+}
+
+type stXFunctionClass struct {
+	baseFunctionClass
+}
+
+func (c *stXFunctionClass) getFunction(ctx sessionctx.Context, args []Expression) (builtinFunc, error) {
+	if err := c.verifyArgs(args); err != nil {
+		return nil, err
+	}
+	bf, err := newBaseBuiltinFuncWithTp(ctx, c.funcName, args, types.ETReal, types.ETString)
+	if err != nil {
+		return nil, err
+	}
+	sig := &builtinSTXDecSig{bf}
+	sig.setPbCode(6203)
+	return sig, nil
+}
+
+type builtinSTYDecSig struct {
+	baseBuiltinFunc
+}
+
+func (b *builtinSTYDecSig) Clone() builtinFunc {
+	newSig := &builtinSTYDecSig{}
+	newSig.cloneFrom(&b.baseBuiltinFunc)
+	return newSig
+}
+
+func (b *builtinSTYDecSig) evalReal(row chunk.Row) (float64, bool, error) {
+	return b.evalRealWithCtx(b.ctx, row)
+}
+
+func (b *builtinSTYDecSig) evalRealWithCtx(ctx sessionctx.Context, row chunk.Row) (float64, bool, error) {
+	val1, isNull, err := b.args[0].EvalString(ctx, row)
+	if err != nil && terror.ErrorEqual(types.ErrWrongValue.GenWithStackByArgs(types.ETString, val1), err) {
+		// Return 0 for invalid date time.
+		return 0, false, nil
+	}
+	if isNull {
+		return 0, true, nil
+	}
+	// ST_Distance function logic
+	geom1, err := wkt.Unmarshal(val1)
+
+	point := geom.NewPoint(geom1.Layout()).MustSetCoords(geom1.FlatCoords())
+
+	return point.Y(), false, nil
+}
+
+type stYFunctionClass struct {
+	baseFunctionClass
+}
+
+func (c *stYFunctionClass) getFunction(ctx sessionctx.Context, args []Expression) (builtinFunc, error) {
+	if err := c.verifyArgs(args); err != nil {
+		return nil, err
+	}
+	bf, err := newBaseBuiltinFuncWithTp(ctx, c.funcName, args, types.ETReal, types.ETString)
+	if err != nil {
+		return nil, err
+	}
+	sig := &builtinSTYDecSig{bf}
+	sig.setPbCode(6204)
+	return sig, nil
+}
+
 type builtinLineStringStringSig struct {
 	baseBuiltinFunc
 }
@@ -275,6 +371,6 @@ func (c *LineStringFunctionClass) getFunction(ctx sessionctx.Context, args []Exp
 		return nil, err
 	}
 	sig := &builtinLineStringStringSig{bf}
-	sig.setPbCode(6203)
+	sig.setPbCode(6300)
 	return sig, nil
 }

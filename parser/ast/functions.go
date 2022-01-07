@@ -355,6 +355,8 @@ const (
 	Point      = "point"
 	StEquals   = "st_equals"
 	StDistance = "st_distance"
+	StX        = "st_x"
+	StY        = "st_y"
 	LineString = "linestring"
 )
 
