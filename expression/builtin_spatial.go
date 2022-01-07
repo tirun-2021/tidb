@@ -212,3 +212,69 @@ func (c *stDistanceFunctionClass) getFunction(ctx sessionctx.Context, args []Exp
 	sig.setPbCode(6202)
 	return sig, nil
 }
+
+type builtinLineStringStringSig struct {
+	baseBuiltinFunc
+}
+
+func (b *builtinLineStringStringSig) Clone() builtinFunc {
+	newSig := &builtinLineStringStringSig{}
+	newSig.cloneFrom(&b.baseBuiltinFunc)
+	return newSig
+}
+
+func (b *builtinLineStringStringSig) evalString(row chunk.Row) (string, bool, error) {
+	return b.evalStringWithCtx(b.ctx, row)
+}
+
+func (b *builtinLineStringStringSig) evalStringWithCtx(ctx sessionctx.Context, row chunk.Row) (string, bool, error) {
+	val1, isNull, err := b.args[0].EvalString(ctx, row)
+	if err != nil && terror.ErrorEqual(types.ErrWrongValue.GenWithStackByArgs(types.ETString, val1), err) {
+		// Return 0 for invalid date time.
+		return "", false, nil
+	}
+	if isNull {
+		return "", true, nil
+	}
+
+	val2, isNull, err := b.args[1].EvalString(ctx, row)
+	if err != nil && terror.ErrorEqual(types.ErrWrongValue.GenWithStackByArgs(types.ETString, val2), err) {
+		// Return 0 for invalid date time.
+		return "", false, nil
+	}
+	if isNull {
+		return "", true, nil
+	}
+
+	geom1, err := wkt.Unmarshal(val1)
+	geom2, err := wkt.Unmarshal(val2)
+
+	point1 := geom.NewPoint(geom1.Layout()).MustSetCoords(geom1.FlatCoords())
+	point2 := geom.NewPoint(geom2.Layout()).MustSetCoords(geom2.FlatCoords())
+
+	// POINT() function logic
+	point := geom.NewLineString(geom.XY).MustSetCoords([]geom.Coord{point1.FlatCoords(), point2.FlatCoords()})
+	pointStr, err := wkt.Marshal(point)
+	if err != nil {
+		return "", false, err
+	}
+
+	return pointStr, false, nil
+}
+
+type LineStringFunctionClass struct {
+	baseFunctionClass
+}
+
+func (c *LineStringFunctionClass) getFunction(ctx sessionctx.Context, args []Expression) (builtinFunc, error) {
+	if err := c.verifyArgs(args); err != nil {
+		return nil, err
+	}
+	bf, err := newBaseBuiltinFuncWithTp(ctx, c.funcName, args, types.ETString, types.ETString, types.ETString)
+	if err != nil {
+		return nil, err
+	}
+	sig := &builtinLineStringStringSig{bf}
+	sig.setPbCode(6203)
+	return sig, nil
+}

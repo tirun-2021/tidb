@@ -355,6 +355,7 @@ const (
 	Point      = "point"
 	StEquals   = "st_equals"
 	StDistance = "st_distance"
+	LineString = "linestring"
 )
 
 type FuncCallExprType int8
