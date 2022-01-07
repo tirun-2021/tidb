@@ -19,6 +19,8 @@ import (
 	"github.com/pingcap/tidb/sessionctx"
 	"github.com/pingcap/tidb/types"
 	"github.com/pingcap/tidb/util/chunk"
+	"github.com/twpayne/go-geom"
+	"github.com/twpayne/go-geom/encoding/wkt"
 	"math"
 )
 
@@ -40,31 +42,40 @@ func (b *builtinPointSigIntSig) Clone() builtinFunc {
 	return newSig
 }
 
-func (b *builtinPointSigIntSig) evalInt(row chunk.Row) (int64, bool, error) {
-	return b.evalIntWithCtx(b.ctx, row)
+func (b *builtinPointSigIntSig) evalString(row chunk.Row) (string, bool, error) {
+	return b.evalStringWithCtx(b.ctx, row)
 }
 
-func (b *builtinPointSigIntSig) evalIntWithCtx(ctx sessionctx.Context, row chunk.Row) (int64, bool, error) {
-	val1, isNull, err := b.args[0].EvalInt(ctx, row)
+func (b *builtinPointSigIntSig) evalStringWithCtx(ctx sessionctx.Context, row chunk.Row) (string, bool, error) {
+	val1, isNull, err := b.args[0].EvalDecimal(ctx, row)
+	fVal1, err := val1.ToFloat64()
 	if err != nil && terror.ErrorEqual(types.ErrWrongValue.GenWithStackByArgs(types.ETInt, val1), err) {
 		// Return 0 for invalid date time.
-		return 0, false, nil
+		return "", false, nil
 	}
 	if isNull {
-		return 0, true, nil
+		return "", true, nil
 	}
 
-	val2, isNull, err := b.args[1].EvalInt(ctx, row)
+	val2, isNull, err := b.args[1].EvalDecimal(ctx, row)
+	fVal2, err := val2.ToFloat64()
 	if err != nil && terror.ErrorEqual(types.ErrWrongValue.GenWithStackByArgs(types.ETInt, val2), err) {
 		// Return 0 for invalid date time.
-		return 0, false, nil
+		return "", false, nil
 	}
 	if isNull {
-		return 0, true, nil
+		return "", true, nil
 	}
 
-	intVal := val1*1000 + val2
-	return intVal, false, nil
+	// POINT() function logic
+	point := geom.NewPoint(geom.XY).MustSetCoords(geom.Coord{fVal1, fVal2})
+	pointStr, err := wkt.Marshal(point)
+	if err != nil {
+		return "", false, err
+	}
+	//intVal := val1*1000 + val2
+
+	return pointStr, false, nil
 }
 
 type pointFunctionClass struct {
@@ -75,7 +86,7 @@ func (c *pointFunctionClass) getFunction(ctx sessionctx.Context, args []Expressi
 	if err := c.verifyArgs(args); err != nil {
 		return nil, err
 	}
-	bf, err := newBaseBuiltinFuncWithTp(ctx, c.funcName, args, types.ETInt, types.ETInt, types.ETInt)
+	bf, err := newBaseBuiltinFuncWithTp(ctx, c.funcName, args, types.ETString, types.ETDecimal, types.ETDecimal)
 	if err != nil {
 		return nil, err
 	}
@@ -117,6 +128,7 @@ func (b *builtinSTEqualsSigIntSig) evalIntWithCtx(ctx sessionctx.Context, row ch
 		return 0, true, nil
 	}
 
+	// ST_Equals function logic
 	intVal := int64(0)
 	if val1 == val2 {
 		intVal = 1
@@ -174,9 +186,11 @@ func (b *builtinSTDistanceSigIntSig) evalRealWithCtx(ctx sessionctx.Context, row
 		return 0, true, nil
 	}
 
+	// ST_Distance function logic
 	realX := 1.0 * float64(val1/1000-val2/1000)
 	realY := 1.0 * float64(val1%1000-val2%1000)
 	realVal := math.Sqrt(realX*realX + realY*realY)
+
 	return realVal, false, nil
 }
 

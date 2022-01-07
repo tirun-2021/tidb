@@ -840,7 +840,7 @@ var (
 	}
 )
 
-var yyhintDebug = 1
+var yyhintDebug = 0
 
 type yyhintLexer interface {
 	Lex(lval *yyhintSymType) int

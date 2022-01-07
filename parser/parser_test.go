@@ -377,8 +377,8 @@ func TestTripleZParser(t *testing.T) {
 	p := parser.New()
 	p.EnableWindowFunc(false)
 	table := []testCase{
-		{"CREATE TABLE geom(g GEOMETRY)", true, "CREATE TABLE `geom` (`g` BIGINT)"},
-		{"CREATE TABLE geom(g POINT)", true, "CREATE TABLE `geom` (`g` BIGINT)"},
+		{"CREATE TABLE geom(g GEOMETRY)", true, "CREATE TABLE `geom` (`g` MEDIUMTEXT)"},
+		{"CREATE TABLE geom(g POINT)", true, "CREATE TABLE `geom` (`g` MEDIUMTEXT)"},
 		{"SELECT POINT(0, 1)", true, "SELECT POINT(0, 1)"},
 		{"INSERT INTO geom (g) VALUES (POINT(0, 1))", true, "INSERT INTO `geom` (`g`) VALUES (POINT(0, 1))"},
 	}

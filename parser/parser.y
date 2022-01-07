@@ -11501,11 +11501,11 @@ Type:
 SpatialType:
 	"POINT"
 	{
-		$$ = types.NewFieldType(mysql.TypeLonglong)
+		$$ = types.NewFieldType(mysql.TypeMediumBlob)
 	}
 |	"GEOMETRY"
 	{
-		$$ = types.NewFieldType(mysql.TypeLonglong)
+		$$ = types.NewFieldType(mysql.TypeMediumBlob)
 	}
 
 NumericType:
