@@ -21,7 +21,7 @@ import (
 	"github.com/pingcap/tidb/util/chunk"
 	"github.com/twpayne/go-geom"
 	"github.com/twpayne/go-geom/encoding/wkt"
-	"math"
+	"github.com/twpayne/go-geom/xy"
 )
 
 var (
@@ -29,26 +29,25 @@ var (
 )
 
 var (
-	_ builtinFunc = &builtinPointSigIntSig{}
+	_ builtinFunc = &builtinPointStringSig{}
 )
 
-type builtinPointSigIntSig struct {
+type builtinPointStringSig struct {
 	baseBuiltinFunc
 }
 
-func (b *builtinPointSigIntSig) Clone() builtinFunc {
-	newSig := &builtinPointSigIntSig{}
+func (b *builtinPointStringSig) Clone() builtinFunc {
+	newSig := &builtinPointStringSig{}
 	newSig.cloneFrom(&b.baseBuiltinFunc)
 	return newSig
 }
 
-func (b *builtinPointSigIntSig) evalString(row chunk.Row) (string, bool, error) {
+func (b *builtinPointStringSig) evalString(row chunk.Row) (string, bool, error) {
 	return b.evalStringWithCtx(b.ctx, row)
 }
 
-func (b *builtinPointSigIntSig) evalStringWithCtx(ctx sessionctx.Context, row chunk.Row) (string, bool, error) {
+func (b *builtinPointStringSig) evalStringWithCtx(ctx sessionctx.Context, row chunk.Row) (string, bool, error) {
 	val1, isNull, err := b.args[0].EvalDecimal(ctx, row)
-	fVal1, err := val1.ToFloat64()
 	if err != nil && terror.ErrorEqual(types.ErrWrongValue.GenWithStackByArgs(types.ETInt, val1), err) {
 		// Return 0 for invalid date time.
 		return "", false, nil
@@ -58,7 +57,6 @@ func (b *builtinPointSigIntSig) evalStringWithCtx(ctx sessionctx.Context, row ch
 	}
 
 	val2, isNull, err := b.args[1].EvalDecimal(ctx, row)
-	fVal2, err := val2.ToFloat64()
 	if err != nil && terror.ErrorEqual(types.ErrWrongValue.GenWithStackByArgs(types.ETInt, val2), err) {
 		// Return 0 for invalid date time.
 		return "", false, nil
@@ -67,13 +65,14 @@ func (b *builtinPointSigIntSig) evalStringWithCtx(ctx sessionctx.Context, row ch
 		return "", true, nil
 	}
 
+	fVal1, err := val1.ToFloat64()
+	fVal2, err := val2.ToFloat64()
 	// POINT() function logic
 	point := geom.NewPoint(geom.XY).MustSetCoords(geom.Coord{fVal1, fVal2})
 	pointStr, err := wkt.Marshal(point)
 	if err != nil {
 		return "", false, err
 	}
-	//intVal := val1*1000 + val2
 
 	return pointStr, false, nil
 }
@@ -90,28 +89,28 @@ func (c *pointFunctionClass) getFunction(ctx sessionctx.Context, args []Expressi
 	if err != nil {
 		return nil, err
 	}
-	sig := &builtinPointSigIntSig{bf}
+	sig := &builtinPointStringSig{bf}
 	sig.setPbCode(6200)
 	return sig, nil
 }
 
-type builtinSTEqualsSigIntSig struct {
+type builtinSTEqualsIntSig struct {
 	baseBuiltinFunc
 }
 
-func (b *builtinSTEqualsSigIntSig) Clone() builtinFunc {
-	newSig := &builtinSTEqualsSigIntSig{}
+func (b *builtinSTEqualsIntSig) Clone() builtinFunc {
+	newSig := &builtinSTEqualsIntSig{}
 	newSig.cloneFrom(&b.baseBuiltinFunc)
 	return newSig
 }
 
-func (b *builtinSTEqualsSigIntSig) evalInt(row chunk.Row) (int64, bool, error) {
+func (b *builtinSTEqualsIntSig) evalInt(row chunk.Row) (int64, bool, error) {
 	return b.evalIntWithCtx(b.ctx, row)
 }
 
-func (b *builtinSTEqualsSigIntSig) evalIntWithCtx(ctx sessionctx.Context, row chunk.Row) (int64, bool, error) {
-	val1, isNull, err := b.args[0].EvalInt(ctx, row)
-	if err != nil && terror.ErrorEqual(types.ErrWrongValue.GenWithStackByArgs(types.ETInt, val1), err) {
+func (b *builtinSTEqualsIntSig) evalIntWithCtx(ctx sessionctx.Context, row chunk.Row) (int64, bool, error) {
+	val1, isNull, err := b.args[0].EvalString(ctx, row)
+	if err != nil && terror.ErrorEqual(types.ErrWrongValue.GenWithStackByArgs(types.ETString, val1), err) {
 		// Return 0 for invalid date time.
 		return 0, false, nil
 	}
@@ -119,8 +118,8 @@ func (b *builtinSTEqualsSigIntSig) evalIntWithCtx(ctx sessionctx.Context, row ch
 		return 0, true, nil
 	}
 
-	val2, isNull, err := b.args[1].EvalInt(ctx, row)
-	if err != nil && terror.ErrorEqual(types.ErrWrongValue.GenWithStackByArgs(types.ETInt, val2), err) {
+	val2, isNull, err := b.args[1].EvalString(ctx, row)
+	if err != nil && terror.ErrorEqual(types.ErrWrongValue.GenWithStackByArgs(types.ETString, val2), err) {
 		// Return 0 for invalid date time.
 		return 0, false, nil
 	}
@@ -144,32 +143,32 @@ func (c *stEqualsFunctionClass) getFunction(ctx sessionctx.Context, args []Expre
 	if err := c.verifyArgs(args); err != nil {
 		return nil, err
 	}
-	bf, err := newBaseBuiltinFuncWithTp(ctx, c.funcName, args, types.ETInt, types.ETInt, types.ETInt)
+	bf, err := newBaseBuiltinFuncWithTp(ctx, c.funcName, args, types.ETInt, types.ETString, types.ETString)
 	if err != nil {
 		return nil, err
 	}
-	sig := &builtinSTEqualsSigIntSig{bf}
+	sig := &builtinSTEqualsIntSig{bf}
 	sig.setPbCode(6201)
 	return sig, nil
 }
 
-type builtinSTDistanceSigIntSig struct {
+type builtinSTDistanceDecSig struct {
 	baseBuiltinFunc
 }
 
-func (b *builtinSTDistanceSigIntSig) Clone() builtinFunc {
-	newSig := &builtinSTDistanceSigIntSig{}
+func (b *builtinSTDistanceDecSig) Clone() builtinFunc {
+	newSig := &builtinSTDistanceDecSig{}
 	newSig.cloneFrom(&b.baseBuiltinFunc)
 	return newSig
 }
 
-func (b *builtinSTDistanceSigIntSig) evalReal(row chunk.Row) (float64, bool, error) {
+func (b *builtinSTDistanceDecSig) evalReal(row chunk.Row) (float64, bool, error) {
 	return b.evalRealWithCtx(b.ctx, row)
 }
 
-func (b *builtinSTDistanceSigIntSig) evalRealWithCtx(ctx sessionctx.Context, row chunk.Row) (float64, bool, error) {
-	val1, isNull, err := b.args[0].EvalInt(ctx, row)
-	if err != nil && terror.ErrorEqual(types.ErrWrongValue.GenWithStackByArgs(types.ETInt, val1), err) {
+func (b *builtinSTDistanceDecSig) evalRealWithCtx(ctx sessionctx.Context, row chunk.Row) (float64, bool, error) {
+	val1, isNull, err := b.args[0].EvalString(ctx, row)
+	if err != nil && terror.ErrorEqual(types.ErrWrongValue.GenWithStackByArgs(types.ETString, val1), err) {
 		// Return 0 for invalid date time.
 		return 0, false, nil
 	}
@@ -177,8 +176,8 @@ func (b *builtinSTDistanceSigIntSig) evalRealWithCtx(ctx sessionctx.Context, row
 		return 0, true, nil
 	}
 
-	val2, isNull, err := b.args[1].EvalInt(ctx, row)
-	if err != nil && terror.ErrorEqual(types.ErrWrongValue.GenWithStackByArgs(types.ETInt, val2), err) {
+	val2, isNull, err := b.args[1].EvalString(ctx, row)
+	if err != nil && terror.ErrorEqual(types.ErrWrongValue.GenWithStackByArgs(types.ETString, val2), err) {
 		// Return 0 for invalid date time.
 		return 0, false, nil
 	}
@@ -187,11 +186,14 @@ func (b *builtinSTDistanceSigIntSig) evalRealWithCtx(ctx sessionctx.Context, row
 	}
 
 	// ST_Distance function logic
-	realX := 1.0 * float64(val1/1000-val2/1000)
-	realY := 1.0 * float64(val1%1000-val2%1000)
-	realVal := math.Sqrt(realX*realX + realY*realY)
+	geom1, err := wkt.Unmarshal(val1)
+	geom2, err := wkt.Unmarshal(val2)
 
-	return realVal, false, nil
+	point1 := geom.NewPoint(geom1.Layout()).MustSetCoords(geom1.FlatCoords())
+	point2 := geom.NewPoint(geom2.Layout()).MustSetCoords(geom2.FlatCoords())
+
+	distance := xy.Distance(point1.FlatCoords(), point2.FlatCoords())
+	return distance, false, nil
 }
 
 type stDistanceFunctionClass struct {
@@ -202,11 +204,11 @@ func (c *stDistanceFunctionClass) getFunction(ctx sessionctx.Context, args []Exp
 	if err := c.verifyArgs(args); err != nil {
 		return nil, err
 	}
-	bf, err := newBaseBuiltinFuncWithTp(ctx, c.funcName, args, types.ETReal, types.ETInt, types.ETInt)
+	bf, err := newBaseBuiltinFuncWithTp(ctx, c.funcName, args, types.ETReal, types.ETString, types.ETString)
 	if err != nil {
 		return nil, err
 	}
-	sig := &builtinSTDistanceSigIntSig{bf}
+	sig := &builtinSTDistanceDecSig{bf}
 	sig.setPbCode(6202)
 	return sig, nil
 }
