@@ -441,3 +441,58 @@ func getGeoStr(geoByteStr string) (string, bool, error) {
 	geoStr, err := wkt.Marshal(geoObj)
 	return geoStr, false, err
 }
+
+type builtinSTGeomFromTextSigStringSig struct {
+	baseBuiltinFunc
+}
+
+func (b *builtinSTGeomFromTextSigStringSig) Clone() builtinFunc {
+	newSig := &builtinSTGeomFromTextSigStringSig{}
+	newSig.cloneFrom(&b.baseBuiltinFunc)
+	return newSig
+}
+
+func (b *builtinSTGeomFromTextSigStringSig) evalString(row chunk.Row) (string, bool, error) {
+	return b.evalStringWithCtx(b.ctx, row)
+}
+
+func (b *builtinSTGeomFromTextSigStringSig) evalStringWithCtx(ctx sessionctx.Context, row chunk.Row) (string, bool, error) {
+	wktStr, isNull, err := b.args[0].EvalString(ctx, row)
+	if err != nil && terror.ErrorEqual(types.ErrWrongValue.GenWithStackByArgs(types.ETString, wktStr), err) {
+		// Return "" for invalid column name
+		return "", false, nil
+	}
+	if isNull {
+		return "", true, nil
+	}
+
+	geoObj, err := wkt.Unmarshal(wktStr)
+	if err != nil {
+		return "", false, err
+	}
+
+	geoBytes, err := wkb.Marshal(geoObj, binary.LittleEndian)
+	if err != nil {
+		return "", false, err
+	}
+
+	byteStr := "0x" + hex.EncodeToString(geoBytes)
+	return byteStr, true, nil
+}
+
+type stGeomFromTextFunctionClass struct {
+	baseFunctionClass
+}
+
+func (c *stGeomFromTextFunctionClass) getFunction(ctx sessionctx.Context, args []Expression) (builtinFunc, error) {
+	if err := c.verifyArgs(args); err != nil {
+		return nil, err
+	}
+	bf, err := newBaseBuiltinFuncWithTp(ctx, c.funcName, args, types.ETString, types.ETString)
+	if err != nil {
+		return nil, err
+	}
+	sig := &builtinSTGeomFromTextSigStringSig{bf}
+	sig.setPbCode(6202)
+	return sig, nil
+}

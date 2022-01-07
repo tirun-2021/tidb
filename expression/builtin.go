@@ -881,13 +881,14 @@ var funcs = map[string]functionClass{
 	ast.SetVal:  &setValFunctionClass{baseFunctionClass{ast.SetVal, 2, 2}},
 
 	// Spatial functions.
-	ast.Point:      &pointFunctionClass{baseFunctionClass{ast.Point, 2, 2}},
-	ast.StEquals:   &stEqualsFunctionClass{baseFunctionClass{ast.StEquals, 2, 2}},
-	ast.StDistance: &stDistanceFunctionClass{baseFunctionClass{ast.StDistance, 2, 2}},
-	ast.StX:        &stXFunctionClass{baseFunctionClass{ast.StX, 1, 1}},
-	ast.StY:        &stYFunctionClass{baseFunctionClass{ast.StY, 1, 1}},
-	ast.LineString: &LineStringFunctionClass{baseFunctionClass{ast.LineString, 2, -1}},
-	ast.StAsText:   &stAsTextFunctionClass{baseFunctionClass{ast.StAsText, 1, 1}},
+	ast.Point:          &pointFunctionClass{baseFunctionClass{ast.Point, 2, 2}},
+	ast.StEquals:       &stEqualsFunctionClass{baseFunctionClass{ast.StEquals, 2, 2}},
+	ast.StDistance:     &stDistanceFunctionClass{baseFunctionClass{ast.StDistance, 2, 2}},
+	ast.StX:            &stXFunctionClass{baseFunctionClass{ast.StX, 1, 1}},
+	ast.StY:            &stYFunctionClass{baseFunctionClass{ast.StY, 1, 1}},
+	ast.LineString:     &LineStringFunctionClass{baseFunctionClass{ast.LineString, 2, -1}},
+	ast.StAsText:       &stAsTextFunctionClass{baseFunctionClass{ast.StAsText, 1, 10}},
+	ast.StGeomFromText: &stGeomFromTextFunctionClass{baseFunctionClass{ast.StGeomFromText, 1, 1}},
 }
 
 // IsFunctionSupported check if given function name is a builtin sql function.

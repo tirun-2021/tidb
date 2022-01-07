@@ -359,6 +359,7 @@ const (
 	StY        = "st_y"
 	LineString = "linestring"
 	StAsText   = "st_astext"
+	StGeomFromText = "st_geomfromtext"
 )
 
 type FuncCallExprType int8
