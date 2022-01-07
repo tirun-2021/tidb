@@ -173,7 +173,8 @@ func (b *builtinSTDistanceDecSig) evalReal(row chunk.Row) (float64, bool, error)
 }
 
 func (b *builtinSTDistanceDecSig) evalRealWithCtx(ctx sessionctx.Context, row chunk.Row) (float64, bool, error) {
-	val1, isNull, err := b.args[0].EvalString(ctx, row)
+	geoByteStr1, isNull, err := b.args[0].EvalString(ctx, row)
+	val1, isNull, err := getGeoStr(geoByteStr1)
 	if err != nil && terror.ErrorEqual(types.ErrWrongValue.GenWithStackByArgs(types.ETString, val1), err) {
 		// Return 0 for invalid date time.
 		return 0, false, nil
@@ -182,7 +183,8 @@ func (b *builtinSTDistanceDecSig) evalRealWithCtx(ctx sessionctx.Context, row ch
 		return 0, true, nil
 	}
 
-	val2, isNull, err := b.args[1].EvalString(ctx, row)
+	geoByteStr2, isNull, err := b.args[1].EvalString(ctx, row)
+	val2, isNull, err := getGeoStr(geoByteStr2)
 	if err != nil && terror.ErrorEqual(types.ErrWrongValue.GenWithStackByArgs(types.ETString, val2), err) {
 		// Return 0 for invalid date time.
 		return 0, false, nil
@@ -234,7 +236,8 @@ func (b *builtinSTXDecSig) evalReal(row chunk.Row) (float64, bool, error) {
 }
 
 func (b *builtinSTXDecSig) evalRealWithCtx(ctx sessionctx.Context, row chunk.Row) (float64, bool, error) {
-	val1, isNull, err := b.args[0].EvalString(ctx, row)
+	geoByteStr1, isNull, err := b.args[0].EvalString(ctx, row)
+	val1, isNull, err := getGeoStr(geoByteStr1)
 	if err != nil && terror.ErrorEqual(types.ErrWrongValue.GenWithStackByArgs(types.ETString, val1), err) {
 		// Return 0 for invalid date time.
 		return 0, false, nil
@@ -282,7 +285,8 @@ func (b *builtinSTYDecSig) evalReal(row chunk.Row) (float64, bool, error) {
 }
 
 func (b *builtinSTYDecSig) evalRealWithCtx(ctx sessionctx.Context, row chunk.Row) (float64, bool, error) {
-	val1, isNull, err := b.args[0].EvalString(ctx, row)
+	geoByteStr1, isNull, err := b.args[0].EvalString(ctx, row)
+	val1, isNull, err := getGeoStr(geoByteStr1)
 	if err != nil && terror.ErrorEqual(types.ErrWrongValue.GenWithStackByArgs(types.ETString, val1), err) {
 		// Return 0 for invalid date time.
 		return 0, false, nil
@@ -404,18 +408,7 @@ func (b *builtinSTAsTextSigIntSig) evalStringWithCtx(ctx sessionctx.Context, row
 	if isNull {
 		return "", true, nil
 	}
-
-	// ST_AsText function logic
-	// "0x....." -> "POINT(1 1)"
-	geoBytes, err := hex.DecodeString(geoByteStr[2:])
-	if err != nil {
-		return "", false, err
-	}
-
-	geoObj, err := wkb.Unmarshal(geoBytes)
-	geoStr, err := wkt.Marshal(geoObj)
-
-	return geoStr, false, nil
+	return getGeoStr(geoByteStr)
 }
 
 type stAsTextFunctionClass struct {
@@ -433,4 +426,18 @@ func (c *stAsTextFunctionClass) getFunction(ctx sessionctx.Context, args []Expre
 	sig := &builtinSTAsTextSigIntSig{bf}
 	sig.setPbCode(6202)
 	return sig, nil
+}
+
+func getGeoStr(geoByteStr string) (string, bool, error) {
+
+	// ST_AsText function logic
+	// "0x....." -> "POINT(1 1)"
+	geoBytes, err := hex.DecodeString(geoByteStr[2:])
+	if err != nil {
+		return "", false, err
+	}
+
+	geoObj, err := wkb.Unmarshal(geoBytes)
+	geoStr, err := wkt.Marshal(geoObj)
+	return geoStr, false, err
 }
