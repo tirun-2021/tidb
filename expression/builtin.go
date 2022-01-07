@@ -887,6 +887,7 @@ var funcs = map[string]functionClass{
 	ast.StX:        &stXFunctionClass{baseFunctionClass{ast.StX, 1, 1}},
 	ast.StY:        &stYFunctionClass{baseFunctionClass{ast.StY, 1, 1}},
 	ast.LineString: &LineStringFunctionClass{baseFunctionClass{ast.LineString, 2, 2}},
+	ast.StAsText:   &stAsTextFunctionClass{baseFunctionClass{ast.StAsText, 1, 1}},
 }
 
 // IsFunctionSupported check if given function name is a builtin sql function.

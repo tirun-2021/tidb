@@ -15,11 +15,14 @@
 package expression
 
 import (
+	"encoding/binary"
+	"encoding/hex"
 	"github.com/pingcap/tidb/parser/terror"
 	"github.com/pingcap/tidb/sessionctx"
 	"github.com/pingcap/tidb/types"
 	"github.com/pingcap/tidb/util/chunk"
 	"github.com/twpayne/go-geom"
+	"github.com/twpayne/go-geom/encoding/wkb"
 	"github.com/twpayne/go-geom/encoding/wkt"
 	"github.com/twpayne/go-geom/xy"
 )
@@ -69,12 +72,15 @@ func (b *builtinPointStringSig) evalStringWithCtx(ctx sessionctx.Context, row ch
 	fVal2, err := val2.ToFloat64()
 	// POINT() function logic
 	point := geom.NewPoint(geom.XY).MustSetCoords(geom.Coord{fVal1, fVal2})
-	pointStr, err := wkt.Marshal(point)
+	//pointStr, err := wkt.Marshal(point)
+	pointBytes, err := wkb.Marshal(point, binary.LittleEndian)
+	byteStr := "0x" + hex.EncodeToString(pointBytes)
+
 	if err != nil {
 		return "", false, err
 	}
 
-	return pointStr, false, nil
+	return byteStr, false, nil
 }
 
 type pointFunctionClass struct {
@@ -372,5 +378,59 @@ func (c *LineStringFunctionClass) getFunction(ctx sessionctx.Context, args []Exp
 	}
 	sig := &builtinLineStringStringSig{bf}
 	sig.setPbCode(6300)
+	return sig, nil
+}
+
+type builtinSTAsTextSigIntSig struct {
+	baseBuiltinFunc
+}
+
+func (b *builtinSTAsTextSigIntSig) Clone() builtinFunc {
+	newSig := &builtinSTAsTextSigIntSig{}
+	newSig.cloneFrom(&b.baseBuiltinFunc)
+	return newSig
+}
+
+func (b *builtinSTAsTextSigIntSig) evalString(row chunk.Row) (string, bool, error) {
+	return b.evalStringWithCtx(b.ctx, row)
+}
+
+func (b *builtinSTAsTextSigIntSig) evalStringWithCtx(ctx sessionctx.Context, row chunk.Row) (string, bool, error) {
+	geoByteStr, isNull, err := b.args[0].EvalString(ctx, row)
+	if err != nil && terror.ErrorEqual(types.ErrWrongValue.GenWithStackByArgs(types.ETString, geoByteStr), err) {
+		// Return "" for invalid column name
+		return "", false, nil
+	}
+	if isNull {
+		return "", true, nil
+	}
+
+	// ST_AsText function logic
+	// "0x....." -> "POINT(1 1)"
+	geoBytes, err := hex.DecodeString(geoByteStr[2:])
+	if err != nil {
+		return "", false, err
+	}
+
+	geoObj, err := wkb.Unmarshal(geoBytes)
+	geoStr, err := wkt.Marshal(geoObj)
+
+	return geoStr, false, nil
+}
+
+type stAsTextFunctionClass struct {
+	baseFunctionClass
+}
+
+func (c *stAsTextFunctionClass) getFunction(ctx sessionctx.Context, args []Expression) (builtinFunc, error) {
+	if err := c.verifyArgs(args); err != nil {
+		return nil, err
+	}
+	bf, err := newBaseBuiltinFuncWithTp(ctx, c.funcName, args, types.ETString, types.ETString)
+	if err != nil {
+		return nil, err
+	}
+	sig := &builtinSTAsTextSigIntSig{bf}
+	sig.setPbCode(6202)
 	return sig, nil
 }

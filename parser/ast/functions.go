@@ -358,6 +358,7 @@ const (
 	StX        = "st_x"
 	StY        = "st_y"
 	LineString = "linestring"
+	StAsText   = "st_astext"
 )
 
 type FuncCallExprType int8
