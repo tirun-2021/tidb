@@ -334,38 +334,33 @@ func (b *builtinLineStringStringSig) evalString(row chunk.Row) (string, bool, er
 }
 
 func (b *builtinLineStringStringSig) evalStringWithCtx(ctx sessionctx.Context, row chunk.Row) (string, bool, error) {
-	val1, isNull, err := b.args[0].EvalString(ctx, row)
-	if err != nil && terror.ErrorEqual(types.ErrWrongValue.GenWithStackByArgs(types.ETString, val1), err) {
-		// Return 0 for invalid date time.
-		return "", false, nil
-	}
-	if isNull {
-		return "", true, nil
-	}
 
-	val2, isNull, err := b.args[1].EvalString(ctx, row)
-	if err != nil && terror.ErrorEqual(types.ErrWrongValue.GenWithStackByArgs(types.ETString, val2), err) {
-		// Return 0 for invalid date time.
-		return "", false, nil
+	coordArr := make([]geom.Coord, 0, len(b.args))
+	for i := 0; i < len(b.args); i++ {
+		geoByteStr, isNull, err := b.args[i].EvalString(ctx, row)
+		val, isNull, err := getGeoStr(geoByteStr)
+		if err != nil && terror.ErrorEqual(types.ErrWrongValue.GenWithStackByArgs(types.ETString, val), err) {
+			// Return 0 for invalid date time.
+			return "", false, nil
+		}
+		if isNull {
+			return "", true, nil
+		}
+		geom1, err := wkt.Unmarshal(val)
+		point := geom.NewPoint(geom1.Layout()).MustSetCoords(geom1.FlatCoords())
+		coordArr = append(coordArr, point.FlatCoords())
 	}
-	if isNull {
-		return "", true, nil
-	}
-
-	geom1, err := wkt.Unmarshal(val1)
-	geom2, err := wkt.Unmarshal(val2)
-
-	point1 := geom.NewPoint(geom1.Layout()).MustSetCoords(geom1.FlatCoords())
-	point2 := geom.NewPoint(geom2.Layout()).MustSetCoords(geom2.FlatCoords())
 
 	// POINT() function logic
-	point := geom.NewLineString(geom.XY).MustSetCoords([]geom.Coord{point1.FlatCoords(), point2.FlatCoords()})
-	pointStr, err := wkt.Marshal(point)
+	lineString := geom.NewLineString(geom.XY).MustSetCoords(coordArr)
+
+	lineStringBytes, err := wkb.Marshal(lineString, binary.LittleEndian)
+	byteStr := "0x" + hex.EncodeToString(lineStringBytes)
 	if err != nil {
 		return "", false, err
 	}
 
-	return pointStr, false, nil
+	return byteStr, false, nil
 }
 
 type LineStringFunctionClass struct {
@@ -376,7 +371,12 @@ func (c *LineStringFunctionClass) getFunction(ctx sessionctx.Context, args []Exp
 	if err := c.verifyArgs(args); err != nil {
 		return nil, err
 	}
-	bf, err := newBaseBuiltinFuncWithTp(ctx, c.funcName, args, types.ETString, types.ETString, types.ETString)
+	argTps := make([]types.EvalType, 0, len(args))
+	argTps = append(argTps, types.ETString)
+	for range args[1:] {
+		argTps = append(argTps, types.ETString)
+	}
+	bf, err := newBaseBuiltinFuncWithTp(ctx, c.funcName, args, types.ETString, argTps...)
 	if err != nil {
 		return nil, err
 	}
