@@ -135,6 +135,11 @@ func isInTokenMap(target string) bool {
 // tokenMap is a map of known identifiers to the parser token ID.
 // Please try to keep the map in alphabetical order.
 var tokenMap = map[string]int{
+	// hackathon
+	"GEOMETRY":   geometry,
+	"LINESTRING": lineString,
+	"POINT":      point,
+	// hackathon end
 	"ACCOUNT":                  account,
 	"ACTION":                   action,
 	"ADD":                      add,

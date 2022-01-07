@@ -68,6 +68,7 @@ require (
 	github.com/tikv/client-go/v2 v2.0.0-alpha.0.20211029104011-2fd3841894de
 	github.com/tikv/pd v1.1.0-beta.0.20211104095303-69c86d05d379
 	github.com/twmb/murmur3 v1.1.3
+	github.com/twpayne/go-geom v1.4.1 // indirect
 	github.com/uber/jaeger-client-go v2.22.1+incompatible
 	github.com/uber/jaeger-lib v2.4.1+incompatible // indirect
 	github.com/wangjohn/quickselect v0.0.0-20161129230411-ed8402a42d5f

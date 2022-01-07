@@ -286,6 +286,11 @@ import (
 	zerofill          "ZEROFILL"
 	natural           "NATURAL"
 
+	/* hackathon added */
+	point      "POINT"
+	lineString "LINESTRING"
+	geometry   "GEOMETRY"
+
 	/* The following tokens belong to UnReservedKeyword. Notice: make sure these tokens are contained in UnReservedKeyword. */
 	account               "ACCOUNT"
 	action                "ACTION"
@@ -1271,6 +1276,7 @@ import (
 	BlobType                               "Blob types"
 	TextType                               "Text types"
 	DateAndTimeType                        "Date and Time types"
+	SpatialType                            "Spatial types"
 	OptFieldLen                            "Field length or empty"
 	FieldLen                               "Field length"
 	FieldOpts                              "Field type definition option list"
@@ -7149,6 +7155,14 @@ FunctionCallKeyword:
 	{
 		$$ = &ast.FuncCallExpr{FnName: model.NewCIStr(ast.PasswordFunc), Args: $3.([]ast.ExprNode)}
 	}
+|	"POINT" '(' ExpressionListOpt ')'
+	{
+		$$ = &ast.FuncCallExpr{FnName: model.NewCIStr(ast.Point), Args: $3.([]ast.ExprNode)}
+	}
+|	"LINESTRING" '(' ExpressionListOpt ')'
+	{
+		$$ = &ast.FuncCallExpr{FnName: model.NewCIStr(ast.LineString), Args: $3.([]ast.ExprNode)}
+	}
 
 FunctionCallNonKeyword:
 	builtinCurTime '(' FuncDatetimePrecListOpt ')'
@@ -11487,6 +11501,21 @@ Type:
 	NumericType
 |	StringType
 |	DateAndTimeType
+|	SpatialType
+
+SpatialType:
+	"POINT"
+	{
+		$$ = types.NewFieldType(mysql.TypeMediumBlob)
+	}
+|	"LINESTRING"
+	{
+		$$ = types.NewFieldType(mysql.TypeMediumBlob)
+	}
+|	"GEOMETRY"
+	{
+		$$ = types.NewFieldType(mysql.TypeMediumBlob)
+	}
 
 NumericType:
 	IntegerType OptFieldLen FieldOpts
