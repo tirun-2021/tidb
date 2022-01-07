@@ -136,8 +136,9 @@ func isInTokenMap(target string) bool {
 // Please try to keep the map in alphabetical order.
 var tokenMap = map[string]int{
 	// hackathon
-	"GEOMETRY": geometry,
-	"POINT":    point,
+	"GEOMETRY":   geometry,
+	"LINESTRING": lineString,
+	"POINT":      point,
 	// hackathon end
 	"ACCOUNT":                  account,
 	"ACTION":                   action,

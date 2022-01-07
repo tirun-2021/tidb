@@ -287,8 +287,9 @@ import (
 	natural           "NATURAL"
 
 	/* hackathon added */
-	point    "POINT"
-	geometry "GEOMETRY"
+	point      "POINT"
+	lineString "LINESTRING"
+	geometry   "GEOMETRY"
 
 	/* The following tokens belong to UnReservedKeyword. Notice: make sure these tokens are contained in UnReservedKeyword. */
 	account               "ACCOUNT"
@@ -7158,6 +7159,10 @@ FunctionCallKeyword:
 	{
 		$$ = &ast.FuncCallExpr{FnName: model.NewCIStr(ast.Point), Args: $3.([]ast.ExprNode)}
 	}
+|	"LINESTRING" '(' ExpressionListOpt ')'
+	{
+		$$ = &ast.FuncCallExpr{FnName: model.NewCIStr(ast.LineString), Args: $3.([]ast.ExprNode)}
+	}
 
 FunctionCallNonKeyword:
 	builtinCurTime '(' FuncDatetimePrecListOpt ')'
@@ -11500,6 +11505,10 @@ Type:
 
 SpatialType:
 	"POINT"
+	{
+		$$ = types.NewFieldType(mysql.TypeMediumBlob)
+	}
+|	"LINESTRING"
 	{
 		$$ = types.NewFieldType(mysql.TypeMediumBlob)
 	}

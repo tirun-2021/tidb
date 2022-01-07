@@ -378,9 +378,12 @@ func TestTripleZParser(t *testing.T) {
 	p.EnableWindowFunc(false)
 	table := []testCase{
 		{"CREATE TABLE geom(g GEOMETRY)", true, "CREATE TABLE `geom` (`g` MEDIUMTEXT)"},
+		{"CREATE TABLE geom(g LINESTRING)", true, "CREATE TABLE `geom` (`g` MEDIUMTEXT)"},
 		{"CREATE TABLE geom(g POINT)", true, "CREATE TABLE `geom` (`g` MEDIUMTEXT)"},
 		{"SELECT POINT(0, 1)", true, "SELECT POINT(0, 1)"},
+		{"SELECT LINESTRING(POINT(0, 0), POINT(1, 1))", true, "SELECT LINESTRING(POINT(0, 0), POINT(1, 1))"},
 		{"INSERT INTO geom (g) VALUES (POINT(0, 1))", true, "INSERT INTO `geom` (`g`) VALUES (POINT(0, 1))"},
+		{"INSERT INTO geom (g) VALUES (LINESTRING(POINT(0, 0), POINT(1, 1)))", true, "INSERT INTO `geom` (`g`) VALUES (LINESTRING(POINT(0, 0), POINT(1, 1)))"},
 	}
 	for _, tbl := range table {
 		_, _, err := p.Parse("", "", "")
