@@ -25,6 +25,7 @@ import (
 	"github.com/twpayne/go-geom/encoding/wkb"
 	"github.com/twpayne/go-geom/encoding/wkt"
 	"github.com/twpayne/go-geom/xy"
+	"math"
 )
 
 var (
@@ -195,10 +196,29 @@ func (b *builtinSTDistanceDecSig) evalRealWithCtx(ctx sessionctx.Context, row ch
 
 	// ST_Distance function logic
 
-	point1 := geom.NewPoint(val1.Layout()).MustSetCoords(val1.FlatCoords())
-	point2 := geom.NewPoint(val2.Layout()).MustSetCoords(val2.FlatCoords())
+	lineString1 := geom.NewLineStringFlat(val1.Layout(), val1.FlatCoords())
+	lineString2 := geom.NewLineStringFlat(val2.Layout(), val2.FlatCoords())
+	distance := xy.Distance(val1.FlatCoords(), val2.FlatCoords())
+	len1 := len(lineString1.Coords())
+	len2 := len(lineString2.Coords())
+	for i := 0; i < len1; i++ {
+		line1Start := lineString1.Coord(i)
+		line1End := line1Start
+		if i+1 < len1 {
+			line1End = lineString1.Coord(i + 1)
+		}
+		for j := 0; j < len2; j++ {
+			line2Start := lineString2.Coord(j)
+			line2End := line2Start
+			if j+1 < len2 {
+				line2End = lineString2.Coord(j + 1)
+			}
 
-	distance := xy.Distance(point1.FlatCoords(), point2.FlatCoords())
+			distance1 := xy.DistanceFromLineToLine(line1Start, line1End, line2Start, line2End)
+			distance = math.Min(distance, distance1)
+		}
+
+	}
 	return distance, false, nil
 }
 
