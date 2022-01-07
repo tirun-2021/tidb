@@ -174,7 +174,7 @@ func (b *builtinSTDistanceDecSig) evalReal(row chunk.Row) (float64, bool, error)
 
 func (b *builtinSTDistanceDecSig) evalRealWithCtx(ctx sessionctx.Context, row chunk.Row) (float64, bool, error) {
 	geoByteStr1, isNull, err := b.args[0].EvalString(ctx, row)
-	val1, isNull, err := getGeoStr(geoByteStr1)
+	val1, isNull, err := getGeoDatum(geoByteStr1)
 	if err != nil && terror.ErrorEqual(types.ErrWrongValue.GenWithStackByArgs(types.ETString, val1), err) {
 		// Return 0 for invalid date time.
 		return 0, false, nil
@@ -184,7 +184,7 @@ func (b *builtinSTDistanceDecSig) evalRealWithCtx(ctx sessionctx.Context, row ch
 	}
 
 	geoByteStr2, isNull, err := b.args[1].EvalString(ctx, row)
-	val2, isNull, err := getGeoStr(geoByteStr2)
+	val2, isNull, err := getGeoDatum(geoByteStr2)
 	if err != nil && terror.ErrorEqual(types.ErrWrongValue.GenWithStackByArgs(types.ETString, val2), err) {
 		// Return 0 for invalid date time.
 		return 0, false, nil
@@ -194,11 +194,9 @@ func (b *builtinSTDistanceDecSig) evalRealWithCtx(ctx sessionctx.Context, row ch
 	}
 
 	// ST_Distance function logic
-	geom1, err := wkt.Unmarshal(val1)
-	geom2, err := wkt.Unmarshal(val2)
 
-	point1 := geom.NewPoint(geom1.Layout()).MustSetCoords(geom1.FlatCoords())
-	point2 := geom.NewPoint(geom2.Layout()).MustSetCoords(geom2.FlatCoords())
+	point1 := geom.NewPoint(val1.Layout()).MustSetCoords(val1.FlatCoords())
+	point2 := geom.NewPoint(val2.Layout()).MustSetCoords(val2.FlatCoords())
 
 	distance := xy.Distance(point1.FlatCoords(), point2.FlatCoords())
 	return distance, false, nil
@@ -237,7 +235,7 @@ func (b *builtinSTXDecSig) evalReal(row chunk.Row) (float64, bool, error) {
 
 func (b *builtinSTXDecSig) evalRealWithCtx(ctx sessionctx.Context, row chunk.Row) (float64, bool, error) {
 	geoByteStr1, isNull, err := b.args[0].EvalString(ctx, row)
-	val1, isNull, err := getGeoStr(geoByteStr1)
+	val1, isNull, err := getGeoDatum(geoByteStr1)
 	if err != nil && terror.ErrorEqual(types.ErrWrongValue.GenWithStackByArgs(types.ETString, val1), err) {
 		// Return 0 for invalid date time.
 		return 0, false, nil
@@ -246,9 +244,8 @@ func (b *builtinSTXDecSig) evalRealWithCtx(ctx sessionctx.Context, row chunk.Row
 		return 0, true, nil
 	}
 	// ST_Distance function logic
-	geom1, err := wkt.Unmarshal(val1)
 
-	point := geom.NewPoint(geom1.Layout()).MustSetCoords(geom1.FlatCoords())
+	point := geom.NewPoint(val1.Layout()).MustSetCoords(val1.FlatCoords())
 
 	return point.X(), false, nil
 }
@@ -286,7 +283,7 @@ func (b *builtinSTYDecSig) evalReal(row chunk.Row) (float64, bool, error) {
 
 func (b *builtinSTYDecSig) evalRealWithCtx(ctx sessionctx.Context, row chunk.Row) (float64, bool, error) {
 	geoByteStr1, isNull, err := b.args[0].EvalString(ctx, row)
-	val1, isNull, err := getGeoStr(geoByteStr1)
+	val1, isNull, err := getGeoDatum(geoByteStr1)
 	if err != nil && terror.ErrorEqual(types.ErrWrongValue.GenWithStackByArgs(types.ETString, val1), err) {
 		// Return 0 for invalid date time.
 		return 0, false, nil
@@ -295,9 +292,8 @@ func (b *builtinSTYDecSig) evalRealWithCtx(ctx sessionctx.Context, row chunk.Row
 		return 0, true, nil
 	}
 	// ST_Distance function logic
-	geom1, err := wkt.Unmarshal(val1)
 
-	point := geom.NewPoint(geom1.Layout()).MustSetCoords(geom1.FlatCoords())
+	point := geom.NewPoint(val1.Layout()).MustSetCoords(val1.FlatCoords())
 
 	return point.Y(), false, nil
 }
@@ -338,7 +334,7 @@ func (b *builtinLineStringStringSig) evalStringWithCtx(ctx sessionctx.Context, r
 	coordArr := make([]geom.Coord, 0, len(b.args))
 	for i := 0; i < len(b.args); i++ {
 		geoByteStr, isNull, err := b.args[i].EvalString(ctx, row)
-		val, isNull, err := getGeoStr(geoByteStr)
+		val, isNull, err := getGeoDatum(geoByteStr)
 		if err != nil && terror.ErrorEqual(types.ErrWrongValue.GenWithStackByArgs(types.ETString, val), err) {
 			// Return 0 for invalid date time.
 			return "", false, nil
@@ -346,8 +342,7 @@ func (b *builtinLineStringStringSig) evalStringWithCtx(ctx sessionctx.Context, r
 		if isNull {
 			return "", true, nil
 		}
-		geom1, err := wkt.Unmarshal(val)
-		point := geom.NewPoint(geom1.Layout()).MustSetCoords(geom1.FlatCoords())
+		point := geom.NewPoint(val.Layout()).MustSetCoords(val.FlatCoords())
 		coordArr = append(coordArr, point.FlatCoords())
 	}
 
@@ -401,7 +396,7 @@ func (b *builtinSTLengthDecSig) evalReal(row chunk.Row) (float64, bool, error) {
 
 func (b *builtinSTLengthDecSig) evalRealWithCtx(ctx sessionctx.Context, row chunk.Row) (float64, bool, error) {
 	geoByteStr1, isNull, err := b.args[0].EvalString(ctx, row)
-	val1, isNull, err := getGeoStr(geoByteStr1)
+	val1, isNull, err := getGeoDatum(geoByteStr1)
 	if err != nil && terror.ErrorEqual(types.ErrWrongValue.GenWithStackByArgs(types.ETString, val1), err) {
 		// Return 0 for invalid date time.
 		return 0, false, nil
@@ -410,8 +405,7 @@ func (b *builtinSTLengthDecSig) evalRealWithCtx(ctx sessionctx.Context, row chun
 		return 0, true, nil
 	}
 
-	geom1, err := wkt.Unmarshal(val1)
-	lineString1 := geom.NewLineStringFlat(geom1.Layout(), geom1.FlatCoords())
+	lineString1 := geom.NewLineStringFlat(val1.Layout(), val1.FlatCoords())
 
 	return lineString1.Length(), false, nil
 }
@@ -456,7 +450,15 @@ func (b *builtinSTAsTextSigIntSig) evalStringWithCtx(ctx sessionctx.Context, row
 	if isNull {
 		return "", true, nil
 	}
-	return getGeoStr(geoByteStr)
+	geoObj, _, err := getGeoDatum(geoByteStr)
+	if err != nil {
+		return "", false, err
+	}
+	geoStr, err := wkt.Marshal(geoObj)
+	if err != nil {
+		return "", false, err
+	}
+	return geoStr, false, nil
 }
 
 type stAsTextFunctionClass struct {
@@ -476,18 +478,18 @@ func (c *stAsTextFunctionClass) getFunction(ctx sessionctx.Context, args []Expre
 	return sig, nil
 }
 
-func getGeoStr(geoByteStr string) (string, bool, error) {
+func getGeoDatum(geoByteStr string) (geom.T, bool, error) {
 
 	// ST_AsText function logic
 	// "0x....." -> "POINT(1 1)"
 	geoBytes, err := hex.DecodeString(geoByteStr[2:])
 	if err != nil {
-		return "", false, err
+		return nil, false, err
 	}
 
 	geoObj, err := wkb.Unmarshal(geoBytes)
-	geoStr, err := wkt.Marshal(geoObj)
-	return geoStr, false, err
+	//geoStr, err := wkt.Marshal(geoObj)
+	return geoObj, false, err
 }
 
 type builtinSTGeomFromTextSigStringSig struct {
@@ -525,7 +527,7 @@ func (b *builtinSTGeomFromTextSigStringSig) evalStringWithCtx(ctx sessionctx.Con
 	}
 
 	byteStr := "0x" + hex.EncodeToString(geoBytes)
-	return byteStr, true, nil
+	return byteStr, false, nil
 }
 
 type stGeomFromTextFunctionClass struct {
