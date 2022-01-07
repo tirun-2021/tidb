@@ -886,6 +886,7 @@ var funcs = map[string]functionClass{
 	ast.StDistance: &stDistanceFunctionClass{baseFunctionClass{ast.StDistance, 2, 2}},
 	ast.StX:        &stXFunctionClass{baseFunctionClass{ast.StX, 1, 1}},
 	ast.StY:        &stYFunctionClass{baseFunctionClass{ast.StY, 1, 1}},
+	ast.StLength:   &stLengthFunctionClass{baseFunctionClass{ast.StLength, 1, 1}},
 	ast.LineString: &LineStringFunctionClass{baseFunctionClass{ast.LineString, 2, -1}},
 	ast.StAsText:   &stAsTextFunctionClass{baseFunctionClass{ast.StAsText, 1, 1}},
 }
